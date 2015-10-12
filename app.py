@@ -33,4 +33,5 @@ def app_factory():
 
     for route in route_map:
         app.router.add_route(*route)
+    app.router.add_static('/uploads', 'uploads/', name='static')
     return app

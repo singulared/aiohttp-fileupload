@@ -1,3 +1,6 @@
 *.pyc
 __pycache__
-.ropeproject
+.ropeproject/
+uploads/
+.vimrc
+.python-version
