@@ -11,9 +11,10 @@ async def root(request):
 
 callbacks = []
 
-def callback_factory(ws):
-    def callback(readed, ws=ws):
-        ws.send_str('readed {}'.format(readed))
+def callback_factory(ws, request):
+    def callback(readed, out, ws=ws, request=request):
+        if out is request._reader.output:
+            ws.send_str('{}'.format(readed))
     return callback
 
 
@@ -21,7 +22,7 @@ async def websocket(request):
     ws = web.WebSocketResponse()
     ws.start(request)
 
-    callbacks.append(callback_factory(ws))
+    callbacks.append(callback_factory(ws, request))
 
     while not ws.closed:
         msg = await ws.receive()
