@@ -9,7 +9,6 @@ import aiohttp.websocket
 aiohttp.websocket._do_handshake = aiohttp.websocket.do_handshake
 
 def do_handshake_hacked(method, headers, transport, protocols=()):
-    print('handshake patched')
     params = list(aiohttp.websocket._do_handshake(
         method, headers, transport, protocols))
     import wsparser
@@ -23,7 +22,6 @@ from aiohttp import web
 from urls import route_map
 import jinja2
 import aiohttp_jinja2
-from uploadprogress import upload_progress_middleware
 
 
 if settings.debug:

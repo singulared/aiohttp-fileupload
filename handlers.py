@@ -26,7 +26,6 @@ async def websocket(request):
 
     while not ws.closed:
         msg = await ws.receive()
-        print(msg.extra)
 
         if msg.tp == aiohttp.MsgType.text:
             if msg.data == 'close':
@@ -39,7 +38,6 @@ async def websocket(request):
             print('ws connection closed with exception %s' %
                   ws.exception())
         elif msg.tp == aiohttp.MsgType.binary:
-            print(msg.tp, dir(msg))
             with open('test', 'wb') as file:
                 file.write(msg.data)
 

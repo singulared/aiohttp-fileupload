@@ -3,14 +3,12 @@ from aiohttp.websocket import (parse_frame, OPCODE_CLOSE, OPCODE_PING,
                                OPCODE_PONG, OPCODE_TEXT, OPCODE_BINARY,
                                OPCODE_CONTINUATION, UNPACK_CLOSE_CODE,
                                ALLOWED_CLOSE_CODES)
-import asyncio
-from aiohttp.streams import FlowControlDataQueue
+from handlers import callbacks
 
 
 def WebSocketHackedParser(out, buf):
     while True:
         fin, opcode, payload = yield from parse_frame(buf)
-        print('++++++++++++++++++++++++++payload:', len(payload), fin)
 
         if opcode == OPCODE_CLOSE:
             if len(payload) >= 2:
@@ -51,7 +49,6 @@ def WebSocketHackedParser(out, buf):
 
             while not fin:
                 fin, _opcode, payload = yield from parse_frame(buf, True)
-                print('while not fin', len(payload))
 
                 # We can receive ping/close in the middle of
                 # text message, Case 5.*
@@ -95,8 +92,6 @@ def WebSocketHackedParser(out, buf):
                     l = 0
                     for d in data:
                         l += len(d)
-                    print('file length:', l)
-                    from handlers import callbacks
                     for callback in callbacks:
                         callback(l, out=out)
 
