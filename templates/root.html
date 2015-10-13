@@ -2,12 +2,29 @@
 <html>
 <body>
 
-<form action="/upload?X-Progress-ID=123" method="post" enctype="multipart/form-data">
+<script>
+var connection = new WebSocket('ws://localhost:8080/ws');        
+connection.onopen = function() {
+    connection.send('Ping'); // Send the message 'Ping' to the server
+};
+connection.onmessage = function(e) {
+    console.log('Server: ' + e.data);
+    var file = document.querySelector('input[type="file"]').files[0];
+    var el = document.getElementById('progress');
+    el.innerText = e.data.split(' ')[1]*100/file.size;
+}
+
+function sendFile() {
+    var file = document.querySelector('input[type="file"]').files[0];
+    connection.send(file);
+}
+</script>
+
+<form action="/upload?X-Progress-ID=123" method="post">
     <input type="file" name="file" id="file">
-    <input type="file" name="image" id="image">
-    <input type="hidden" name="fhidden" value="test">
-    <input type="submit" value="Upload File" name="submit">
+    <input type="button" value="Upload File" onclick="sendFile()">
 </form>
+<div id="progress"></div>
 {% for url in urls %}
     <a href='{{url}}'>Download file</a><br/>
 {% endfor %}

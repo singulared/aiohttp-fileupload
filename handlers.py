@@ -1,26 +1,45 @@
 import aiohttp_jinja2
 import asyncio
+from aiohttp import web
+import aiohttp
+from aiohttp import websocket
 
 
 @aiohttp_jinja2.template('root.html')
 async def root(request):
     return {}
 
+callbacks = []
 
-def save_files(files):
-    urls = []
-    for file_field in files:
-        with open('uploads/{}'.format(file_field.filename), 'wb') as file:
-            file.write(file_field.file.read())
-            urls.append('/uploads/{}'.format(file_field.filename))
-    return urls
+def callback_factory(ws):
+    def callback(readed, ws=ws):
+        ws.send_str('readed {}'.format(readed))
+    return callback
 
 
-@aiohttp_jinja2.template('root.html')
-async def upload(request):
-    data = await request.post()
-    #import ipdb; ipdb.set_trace()  # XXX BREAKPOINT
-    files = request['file_fields']
-    loop = asyncio.get_event_loop()
-    urls = await loop.run_in_executor(None, save_files, files)
-    return {'urls': urls}
+async def websocket(request):
+    ws = web.WebSocketResponse()
+    ws.start(request)
+
+    callbacks.append(callback_factory(ws))
+
+    while not ws.closed:
+        msg = await ws.receive()
+        print(msg.extra)
+
+        if msg.tp == aiohttp.MsgType.text:
+            if msg.data == 'close':
+                await ws.close()
+            else:
+                ws.send_str(msg.data + '/answer')
+        elif msg.tp == aiohttp.MsgType.close:
+            print('websocket connection closed')
+        elif msg.tp == aiohttp.MsgType.error:
+            print('ws connection closed with exception %s' %
+                  ws.exception())
+        elif msg.tp == aiohttp.MsgType.binary:
+            print(msg.tp, dir(msg))
+            with open('test', 'wb') as file:
+                file.write(msg.data)
+
+    return ws

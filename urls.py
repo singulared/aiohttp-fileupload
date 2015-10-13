@@ -1,7 +1,7 @@
-from handlers import root, upload
+from handlers import root, websocket
 
 
 route_map = (
     ('GET', '/', root),
-    ('POST', '/upload', upload)
+    ('GET', '/ws', websocket)
 )
