@@ -5,18 +5,7 @@ import logging
 if settings.debug:
     os.environ['PYTHONASYNCIODEBUG'] = '1'
 
-import aiohttp.websocket
-aiohttp.websocket._do_handshake = aiohttp.websocket.do_handshake
-
-def do_handshake_hacked(method, headers, transport, protocols=()):
-    params = list(aiohttp.websocket._do_handshake(
-        method, headers, transport, protocols))
-    import wsparser
-    params[2] = wsparser.WebSocketHackedParser
-    return tuple(params)
-
-aiohttp.websocket.do_handshake = do_handshake_hacked
-
+import wsparser #noqa
 import asyncio
 from aiohttp import web
 from urls import route_map
@@ -34,7 +23,7 @@ def app_factory():
     aiohttp_jinja2.setup(app,
                          loader=jinja2.FileSystemLoader('templates'))
 
-    app.logger = logging.getLogger('')
+    app.logger = logging.getLogger('uploader')
     ch = logging.StreamHandler()
     app.logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter(

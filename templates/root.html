@@ -3,19 +3,39 @@
 <body>
 
 <script>
-var connection = new WebSocket('ws://localhost:8080/ws');        
+function url(s) {
+    var l = window.location;
+    return ((l.protocol === "https:") ? "wss://" : "ws://") + l.hostname + (((l.port != 80) && (l.port != 443)) ? ":" + l.port : "") + l.pathname + s;
+}
+var connection = new WebSocket(url('ws'));        
 connection.onopen = function() {
     //connection.send('Ping'); // Send the message 'Ping' to the server
 };
 connection.onmessage = function(e) {
     //console.log('Server: ' + e.data);
+    var msg = JSON.parse(e.data); 
     var file = document.querySelector('input[type="file"]').files[0];
-    var el = document.getElementById('progress');
-    el.innerText = Math.round(e.data*100/file.size) + '%';
+    var progress = document.getElementById('progress');
+    var url = document.getElementById('url')
+    if(msg.state == 'uploading') {
+        var percent = Math.round(msg.received * 100 / file.size);
+        progress.innerText = percent + '%';
+        if (percent == 100)
+            url.innerText = 'Please wait, saving file on FS...'
+        else
+            url.innerHTML = '';
+    }
+    else if(msg.state == 'done') {
+        url.innerHTML = '<a href="' + msg.url + '">Downlod file</a>';
+    }
 }
 
 function sendFile() {
     var file = document.querySelector('input[type="file"]').files[0];
+
+    // send file metadata
+    connection.send(JSON.stringify({filename: file.name, size: file.size}))
+    // upload file
     connection.send(file);
 }
 </script>
@@ -25,9 +45,6 @@ function sendFile() {
     <input type="button" value="Upload File" onclick="sendFile()">
 </form>
 <div id="progress"></div>
-{% for url in urls %}
-    <a href='{{url}}'>Download file</a><br/>
-{% endfor %}
-
+<div id="url"></div>
 </body>
 </html>

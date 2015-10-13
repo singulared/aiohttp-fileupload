@@ -1,3 +1,14 @@
+import aiohttp.websocket
+aiohttp.websocket._do_handshake = aiohttp.websocket.do_handshake
+
+def do_handshake_hacked(method, headers, transport, protocols=()):
+    params = list(aiohttp.websocket._do_handshake(
+        method, headers, transport, protocols))
+    params[2] = WebSocketHackedParser
+    return tuple(params)
+
+aiohttp.websocket.do_handshake = do_handshake_hacked
+
 from aiohttp.websocket import *
 from aiohttp.websocket import (parse_frame, OPCODE_CLOSE, OPCODE_PING,
                                OPCODE_PONG, OPCODE_TEXT, OPCODE_BINARY,
@@ -89,11 +100,9 @@ def WebSocketHackedParser(out, buf):
                         'to be zero, got {!r}'.format(_opcode))
                 else:
                     data.append(payload)
-                    l = 0
-                    for d in data:
-                        l += len(d)
+                    data_length = sum(map(len, data))
                     for callback in callbacks:
-                        callback(l, out=out)
+                        callback(data_length, out=out)
 
             if opcode == OPCODE_TEXT:
                 try:
